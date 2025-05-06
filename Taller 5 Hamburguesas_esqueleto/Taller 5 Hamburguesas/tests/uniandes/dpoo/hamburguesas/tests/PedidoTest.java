@@ -14,7 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 
-// Make sure these packages exist and contain the necessary classes
+
 import uniandes.dpoo.hamburguesas.mundo.Combo;
 import uniandes.dpoo.hamburguesas.mundo.Ingrediente;
 import uniandes.dpoo.hamburguesas.mundo.Pedido;
@@ -29,7 +29,7 @@ class PedidoTest {
     private String nombreCliente = "Juan Perez";
     private String direccionCliente = "Calle Falsa 123";
 
-    // Helper to reset static counter
+
     private void resetNumeroPedidos() {
         try {
             Field field = Pedido.class.getDeclaredField("numeroPedidos");
@@ -40,58 +40,27 @@ class PedidoTest {
         }
     }
 
-    // Helper methods for ProductoAjustado (using reflection for testing private fields)
-    // Consider adding public add/remove methods to ProductoAjustado for cleaner tests
-    private void agregarIngrediente(ProductoAjustado pa, Ingrediente ing) {
-         try {
-            Field agregadosField = ProductoAjustado.class.getDeclaredField("agregados");
-            agregadosField.setAccessible(true);
-            @SuppressWarnings("unchecked")
-            ArrayList<Ingrediente> agregadosList = (ArrayList<Ingrediente>) agregadosField.get(pa);
-            agregadosList.add(ing);
-         } catch (NoSuchFieldException | IllegalAccessException e) {
-             fail("Failed to access 'agregados' field.", e);
-         }
-    }
-
-    private void eliminarIngrediente(ProductoAjustado pa, Ingrediente ing) {
-         try {
-            Field eliminadosField = ProductoAjustado.class.getDeclaredField("eliminados");
-            eliminadosField.setAccessible(true);
-            @SuppressWarnings("unchecked")
-            ArrayList<Ingrediente> eliminadosList = (ArrayList<Ingrediente>) eliminadosField.get(pa);
-            eliminadosList.add(ing);
-         } catch (NoSuchFieldException | IllegalAccessException e) {
-             fail("Failed to access 'eliminados' field.", e);
-         }
-    }
-
-    // Uses the ORIGINAL (likely incorrect) getPrecio() logic from ProductoAjustado
-    private int getPrecioOriginalProductoAjustado(ProductoAjustado pa) {
-        // Simulates the "return 0;" or reflects the actual current state
-        return pa.getPrecio(); // Call the actual method
-    }
 
 
     @BeforeEach
     void setUp() {
-        resetNumeroPedidos(); // Reset ID counter BEFORE creating the test instance
-        pedido = new Pedido(nombreCliente, direccionCliente); // This consumes ID 0
+        resetNumeroPedidos(); 
+        pedido = new Pedido(nombreCliente, direccionCliente); 
     }
 
     @AfterEach
     void tearDown() {
-        resetNumeroPedidos(); // Clean up static state
+        resetNumeroPedidos(); 
     }
 
 
     @Test
     void testConstructorYGettersIniciales() {
-        assertEquals(0, pedido.getIdPedido(), "El ID del primer pedido debe ser 0."); // ID consumed by setUp's pedido
+        assertEquals(0, pedido.getIdPedido(), "El ID del primer pedido debe ser 0."); 
         assertEquals(nombreCliente, pedido.getNombreCliente(), "El nombre del cliente no coincide.");
       
 
-        // Check initial product list state via reflection (optional)
+        
         try {
             Field productosField = Pedido.class.getDeclaredField("productos");
             productosField.setAccessible(true);
@@ -108,12 +77,12 @@ class PedidoTest {
 
     @Test
     void testAsignacionIdPedidosMultiples() {
-        // The 'pedido' instance created in setUp() got ID 0.
-        Pedido pedido1 = new Pedido("Cliente 1", "Dir 1"); // Should get ID 1
-        Pedido pedido2 = new Pedido("Cliente 2", "Dir 2"); // Should get ID 2
-        Pedido pedido3 = new Pedido("Cliente 3", "Dir 3"); // Should get ID 3
+       
+        Pedido pedido1 = new Pedido("Cliente 1", "Dir 1"); 
+        Pedido pedido2 = new Pedido("Cliente 2", "Dir 2"); 
+        Pedido pedido3 = new Pedido("Cliente 3", "Dir 3"); 
 
-        // Corrected expectations:
+ 
         assertEquals(1, pedido1.getIdPedido(), "ID Pedido 1 incorrecto.");
         assertEquals(2, pedido2.getIdPedido(), "ID Pedido 2 incorrecto.");
         assertEquals(3, pedido3.getIdPedido(), "ID Pedido 3 incorrecto.");
@@ -121,25 +90,23 @@ class PedidoTest {
 
     @Test
     void testAgregarProductoYCalcularPrecios() {
-        // Arrange
+  
         ProductoMenu pMenu = new ProductoMenu("papas grandes", 6900);
         ProductoMenu itemCombo1 = new ProductoMenu("corral", 14000);
         ProductoMenu itemCombo2 = new ProductoMenu("gaseosa", 5000);
         ArrayList<ProductoMenu> itemsCombo = new ArrayList<>();
         itemsCombo.add(itemCombo1);
         itemsCombo.add(itemCombo2);
-        Combo combo = new Combo("combo sencillo", 0.10, itemsCombo); // Price (impl): (14k+5k)*0.10 = 1900
+        Combo combo = new Combo("combo sencillo", 0.10, itemsCombo); 
         ProductoMenu pBaseAjustado = new ProductoMenu("corralita", 13000);
         ProductoAjustado pAjustado = new ProductoAjustado(pBaseAjustado);
-        Ingrediente queso = new Ingrediente("queso americano", 2500);
-        agregarIngrediente(pAjustado, queso); // Adds ingredient but doesn't affect price in original code
-
-        // Act
+       
+ 
         pedido.agregarProducto(pMenu);
         pedido.agregarProducto(combo);
         pedido.agregarProducto(pAjustado);
 
-        // Assert Precios (using reflection for private methods and ORIGINAL pAjustado price)
+     
         try {
             java.lang.reflect.Method getPrecioNeto = Pedido.class.getDeclaredMethod("getPrecioNetoPedido");
             getPrecioNeto.setAccessible(true);
@@ -147,7 +114,7 @@ class PedidoTest {
             getPrecioIVA.setAccessible(true);
 
             // Corrected expectation based on ORIGINAL ProductoAjustado.getPrecio() returning 0
-            int precioAjustadoActual = getPrecioOriginalProductoAjustado(pAjustado); // Should be 0
+            int precioAjustadoActual = pAjustado.getPrecio(); // Should be 0
             int precioNetoEsperado = pMenu.getPrecio() + combo.getPrecio() + precioAjustadoActual;
             // 6900 + 1900 + 0 = 8800
             int precioNetoCalculado = (int) getPrecioNeto.invoke(pedido);
@@ -178,7 +145,7 @@ class PedidoTest {
         Combo combo = new Combo("combo sencillo", 0.10, itemsCombo); 
         ProductoMenu pBaseAjustado = new ProductoMenu("corralita", 13000);
         ProductoAjustado pAjustado = new ProductoAjustado(pBaseAjustado);
-        int precioAjustadoActual = getPrecioOriginalProductoAjustado(pAjustado); 
+        int precioAjustadoActual = pAjustado.getPrecio(); 
         pedido.agregarProducto(pMenu);
         pedido.agregarProducto(combo);
         pedido.agregarProducto(pAjustado);

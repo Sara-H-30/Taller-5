@@ -25,7 +25,7 @@ class ComboTest {
         items.add(item1);
         items.add(item2);
         items.add(item3);
-        // Combo con 10% de descuento
+       
         combo = new Combo("corral", 0.10, items);
     }
 
