@@ -113,18 +113,18 @@ class PedidoTest {
             java.lang.reflect.Method getPrecioIVA = Pedido.class.getDeclaredMethod("getPrecioIVAPedido");
             getPrecioIVA.setAccessible(true);
 
-            // Corrected expectation based on ORIGINAL ProductoAjustado.getPrecio() returning 0
-            int precioAjustadoActual = pAjustado.getPrecio(); // Should be 0
+         
+            int precioAjustadoActual = pAjustado.getPrecio(); 
             int precioNetoEsperado = pMenu.getPrecio() + combo.getPrecio() + precioAjustadoActual;
-            // 6900 + 1900 + 0 = 8800
-            int precioNetoCalculado = (int) getPrecioNeto.invoke(pedido);
-            assertEquals(precioNetoEsperado, precioNetoCalculado, "Precio Neto incorrecto."); // Expect 8800
 
-            int precioIVAEsperado = (int) (precioNetoEsperado * IVA); // 8800 * 0.19 = 1672
+            int precioNetoCalculado = (int) getPrecioNeto.invoke(pedido);
+            assertEquals(precioNetoEsperado, precioNetoCalculado, "Precio Neto incorrecto."); 
+
+            int precioIVAEsperado = (int) (precioNetoEsperado * IVA); 
             int precioIVACalculado = (int) getPrecioIVA.invoke(pedido);
             assertEquals(precioIVAEsperado, precioIVACalculado, "Precio IVA incorrecto.");
 
-            int precioTotalEsperado = precioNetoEsperado + precioIVAEsperado; // 8800 + 1672 = 10472
+            int precioTotalEsperado = precioNetoEsperado + precioIVAEsperado; 
             int precioTotalCalculado = pedido.getPrecioTotalPedido();
             assertEquals(precioTotalEsperado, precioTotalCalculado, "Precio Total incorrecto.");
 
@@ -136,13 +136,13 @@ class PedidoTest {
     @Test
     void testGenerarTextoFacturaCompleta() {
         
-        ProductoMenu pMenu = new ProductoMenu("papas grandes", 6900);
+        ProductoMenu pMenu = new ProductoMenu("papas medianas", 5500);
         ProductoMenu itemCombo1 = new ProductoMenu("corral", 14000);
         ProductoMenu itemCombo2 = new ProductoMenu("gaseosa", 5000);
         ArrayList<ProductoMenu> itemsCombo = new ArrayList<>();
         itemsCombo.add(itemCombo1);
         itemsCombo.add(itemCombo2);
-        Combo combo = new Combo("combo sencillo", 0.10, itemsCombo); 
+        Combo combo = new Combo("combo corral", 0.10, itemsCombo); 
         ProductoMenu pBaseAjustado = new ProductoMenu("corralita", 13000);
         ProductoAjustado pAjustado = new ProductoAjustado(pBaseAjustado);
         int precioAjustadoActual = pAjustado.getPrecio(); 
@@ -164,24 +164,20 @@ class PedidoTest {
         assertTrue(factura.contains(pMenu.generarTextoFactura()), "Falta texto factura ProductoMenu.");
         assertTrue(factura.contains(combo.generarTextoFactura()), "Falta texto factura Combo.");
 
-        // Check ProductoAjustado section based on its implementation
-        // Assuming pBase.toString() gives something like "uniandes.dpoo...ProductoMenu@hash"
-        // And generarTextoFactura appends ingredients and the (original) price
-        String expectedPAjustadoStart = pBaseAjustado.toString(); // Or manually construct if known
+   
+        String expectedPAjustadoStart = pBaseAjustado.toString(); 
         assertTrue(factura.contains(expectedPAjustadoStart), "Factura no contiene inicio de ProductoAjustado (toString).");
-        // Explicitly check for name via getNombre if toString is unreliable
-        //assertTrue(factura.contains(pAjustado.getNombre())); // This might still fail if toString() is minimal
-
+        
 
        
         assertTrue(factura.contains(" " + precioAjustadoActual + "\n"), "Falta precio final de ProductoAjustado o newline incorrecto.");
 
-        // Check totals at the end
+
         assertTrue(factura.contains("Precio Neto:  " + precioNeto), "Precio Neto incorrecto en factura.");
         assertTrue(factura.contains("IVA:         " + precioIVA), "IVA incorrecto en factura.");
         assertTrue(factura.contains("Precio Total: " + precioTotal), "Precio Total incorrecto en factura.");
 
-        // Check structure (simple check for total section)
+
         String[] lines = factura.split("\n");
         assertTrue(lines[lines.length-3].trim().startsWith("Precio Neto:"));
         assertTrue(lines[lines.length-2].trim().startsWith("IVA:"));
@@ -190,16 +186,16 @@ class PedidoTest {
 
     @Test
     void testGuardarFactura(@TempDir Path tempDir) throws IOException {
-        // Arrange
+
         ProductoMenu pMenu = new ProductoMenu("papas grandes", 6900);
         pedido.agregarProducto(pMenu);
         String facturaEsperada = pedido.generarTextoFactura();
         File archivoFactura = tempDir.resolve("factura_test_ok.txt").toFile();
 
-        // Act
+  
         pedido.guardarFactura(archivoFactura);
 
-        // Assert
+
         assertTrue(archivoFactura.exists(), "El archivo de factura no fue creado.");
         String contenidoLeido = Files.readString(archivoFactura.toPath());
         assertEquals(facturaEsperada, contenidoLeido, "El contenido del archivo no coincide con la factura generada.");
